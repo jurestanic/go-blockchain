@@ -1,3 +1,3 @@
-module github.com/jurestanic/goblockchain
+module github.com/jurestanic/go-blockchain
 
 go 1.16
