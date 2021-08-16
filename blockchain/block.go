@@ -1,12 +1,10 @@
 package blockchain
 
 import (
-	"fmt"
+	"bytes"
+	"encoding/gob"
+	"log"
 )
-
-type blockChain struct {
-	blocks []*block
-}
 
 type block struct {
 	Hash     []byte
@@ -26,25 +24,33 @@ func createBlock(data string, prevHash []byte) *block {
 	return block
 }
 
-func (chain *blockChain) AddBlock(data string) {
-	prevBlock := chain.blocks[len(chain.blocks)-1]
-	newBlock := createBlock(data, prevBlock.Hash)
-	chain.blocks = append(chain.blocks, newBlock)
-}
-
 func genesis() *block {
 	return createBlock("Genesis Block", []byte{})
 }
 
-func InitBlockChain() *blockChain {
-	return &blockChain{[]*block{genesis()}}
+func (b *block) serialize() []byte {
+	var res bytes.Buffer
+	encoder := gob.NewEncoder(&res)
+
+	err := encoder.Encode(b)
+
+	if err != nil {
+		log.Panic(err)
+	}
+
+	return res.Bytes()
 }
 
-func PrintBlockChain(chain *blockChain) {
-	for _, block := range chain.blocks {
-		fmt.Printf("Prev Hash: %x\n", block.PrevHash)
-		fmt.Printf("Data In Block: %s\n", block.Data)
-		fmt.Printf("Hash: %x\n", block.Hash)
-		fmt.Println()
+func deserialize(data []byte) *block {
+	var block block
+
+	decoder := gob.NewDecoder(bytes.NewReader(data))
+
+	err := decoder.Decode(&block)
+
+	if err != nil {
+		log.Panic(err)
 	}
+
+	return &block
 }
