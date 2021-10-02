@@ -54,7 +54,7 @@ func (pow *proofOfWork) run() (int, []byte) {
 func (pow *proofOfWork) initData(nonce int) []byte {
 	data := bytes.Join([][]byte{
 		pow.block.PrevHash,
-		pow.block.Data,
+		pow.block.HashTransactions(),
 		intToBytes(int64(nonce)),
 		intToBytes(int64(difficulty)),
 	}, []byte{})
