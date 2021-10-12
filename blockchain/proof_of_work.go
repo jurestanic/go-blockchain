@@ -13,11 +13,11 @@ import (
 const difficulty = 12
 
 type proofOfWork struct {
-	block  *block
+	block  *Block
 	target *big.Int
 }
 
-func newProof(b *block) *proofOfWork {
+func NewProof(b *Block) *proofOfWork {
 	target := big.NewInt(1)
 	target.Lsh(target, uint(256-difficulty))
 
@@ -26,7 +26,7 @@ func newProof(b *block) *proofOfWork {
 	return pow
 }
 
-func (pow *proofOfWork) run() (int, []byte) {
+func (pow *proofOfWork) Run() (int, []byte) {
 	var intHash big.Int
 	var hash [32]byte
 

@@ -4,65 +4,69 @@ import (
 	"bytes"
 	"encoding/gob"
 	"log"
+	"time"
 )
 
-type block struct {
-	Hash        []byte
-	Transaction []*Transaction
-	PrevHash    []byte
-	Nonce       int
+type Block struct {
+	Timestamp    int64
+	Hash         []byte
+	Transactions []*Transaction
+	PrevHash     []byte
+	Nonce        int
+	Height       int
 }
 
-func (b *block) HashTransactions() []byte {
+func (b *Block) HashTransactions() []byte {
 	var txHashes [][]byte
 
-	for _, tx := range b.Transaction {
+	for _, tx := range b.Transactions {
 		txHashes = append(txHashes, tx.Serialize())
 	}
-
 	tree := NewMerkleTree(txHashes)
 
 	return tree.RootNode.Data
 }
 
-func createBlock(txs []*Transaction, prevHash []byte) *block {
-	block := &block{Hash: []byte{}, Transaction: txs, PrevHash: prevHash, Nonce: 0}
-	pow := newProof(block)
-	nonce, hash := pow.run()
+func CreateBlock(txs []*Transaction, prevHash []byte, height int) *Block {
+	block := &Block{time.Now().Unix(), []byte{}, txs, prevHash, 0, height}
+	pow := NewProof(block)
+	nonce, hash := pow.Run()
 
-	block.Hash = hash
+	block.Hash = hash[:]
 	block.Nonce = nonce
 
 	return block
 }
 
-func genesis(coinbase *Transaction) *block {
-	return createBlock([]*Transaction{coinbase}, []byte{})
+func Genesis(coinbase *Transaction) *Block {
+	return CreateBlock([]*Transaction{coinbase}, []byte{}, 0)
 }
 
-func (b *block) serialize() []byte {
+func (b *Block) Serialize() []byte {
 	var res bytes.Buffer
 	encoder := gob.NewEncoder(&res)
 
 	err := encoder.Encode(b)
 
-	if err != nil {
-		log.Panic(err)
-	}
+	Handle(err)
 
 	return res.Bytes()
 }
 
-func deserialize(data []byte) *block {
-	var block block
+func Deserialize(data []byte) *Block {
+	var block Block
 
 	decoder := gob.NewDecoder(bytes.NewReader(data))
 
 	err := decoder.Decode(&block)
 
+	Handle(err)
+
+	return &block
+}
+
+func Handle(err error) {
 	if err != nil {
 		log.Panic(err)
 	}
-
-	return &block
 }
